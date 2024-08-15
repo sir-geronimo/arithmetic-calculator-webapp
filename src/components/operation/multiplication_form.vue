@@ -3,8 +3,8 @@ import { reactive } from 'vue'
 import OperationForm from './operation_form.vue'
 
 const form = reactive({
-  num1: 0,
-  num2: 0,
+  num1: "0",
+  num2: "0",
 })
 
 const emit = defineEmits<{

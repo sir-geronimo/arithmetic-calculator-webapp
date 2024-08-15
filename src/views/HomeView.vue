@@ -1,71 +1,80 @@
-<script setup lang="ts">
-import { useAuth } from '@/composables/auth'
-import { useOperation } from '@/composables/operation'
+<script lang="ts" setup>
+import { CreateOperation, PerformOperation } from '@/services/Operation'
+import RecordsTable from '@/components/records_table.vue'
 import { useAppStore } from '@/stores/app.store'
-import type { Operation } from '@/types/operation'
-import { computed, defineAsyncComponent, reactive, ref } from 'vue'
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
+import { computed, defineAsyncComponent, ref } from 'vue'
+import type { Record } from '@/types/record'
 
 const appStore = useAppStore()
-const { getToken } = useAuth()
-const { performOperation } = useOperation()
+const queryClient = useQueryClient()
 
-const operation = ref(null)
+const operation = ref<string | null>(null)
 const operations = ref([
-  { title: 'Addition', value: 'addition'},
-  { title: 'Subtraction', value: 'subtraction'},
-  { title: 'Multiplication', value: 'multiplication'},
-  { title: 'Division', value: 'division'},
-  { title: 'Square Root', value: 'square_root'},
-  { title: 'Random String', value: 'random_string'},
+  { title: 'Addition', value: 'addition' },
+  { title: 'Subtraction', value: 'subtraction' },
+  { title: 'Multiplication', value: 'multiplication' },
+  { title: 'Division', value: 'division' },
+  { title: 'Square Root', value: 'square_root' },
+  { title: 'Random String', value: 'random_string' },
 ])
 
-const createOperation = reactive<{
-  data: Operation | null
-  isLoading: boolean
-  isError: boolean
-}>({
-  data: null,
-  isLoading: false,
-  isError: false,
+const {
+  data: createOperation,
+  isPending: createOperationIsPending,
+  isError: createOperationIsError,
+  error: createOperationError,
+  mutate: createOperationMutate,
+  reset: createOperationReset,
+} = useMutation({
+  mutationFn: CreateOperation,
+  onSuccess: async (err) => {
+    if (err.status === 401) {
+      await router.push({ name: 'login' })
+
+      setToken('')
+    }
+  },
 })
 
-const operationComponent = computed(() => createOperation.data?.name 
-  ? defineAsyncComponent(() => import(`@/components/${createOperation.data?.name}_form.vue`)) 
-  : ''
+const {
+  isError: performOperationIsError,
+  error: performOperationError,
+  mutate: performOperationMutate,
+} = useMutation({
+  mutationFn: PerformOperation,
+  onSuccess: (record: Record) => {
+    appStore.balance -= record.operation.cost
+    queryClient.invalidateQueries({ queryKey: ['records'] })
+    operation.value = null
+    createOperationReset()
+  },
+})
+
+const isError = computed(() => performOperationIsError.value || createOperationIsError.value)
+const error = computed(() => performOperationError.value || createOperationError.value)
+
+const operationComponent = computed(() =>
+  createOperation.value
+    ? defineAsyncComponent(
+        () => import(`@/components/operation/${createOperation.value.name}_form.vue`)
+      )
+    : ''
 )
 
-async function handleCreateOperation(): Promise<void> {
-  try {
-    createOperation.isLoading = true
-
-    const res = await fetch(new URL('v1/operations', import.meta.env.VITE_API_BASE_URL), {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ name: operation.value })
-    })
-    if (!res.ok) {
-      // TODO: Logout user if status is 401
-      createOperation.isError = true
-      throw new Error(`failed with status: ${res.status}`)
-    }
-
-    createOperation.data = await res.json()
-    if (createOperation.data) {
-      appStore.balance -= createOperation.data.cost
-    }
-  } finally {
-    createOperation.isLoading = false
-  }
-}
-
 async function handlePerformOperation(payload: string): Promise<void> {
-  if (!createOperation.data) {
+  if (!createOperation.value) {
     return
   }
 
-  await performOperation(createOperation.data.id, payload)
+  performOperationMutate({
+    operationId: createOperation.value.id,
+    payload,
+  })
+}
+
+async function handleCreateOperation(): Promise<void> {
+  createOperationMutate(JSON.stringify({ name: operation.value }))
 }
 </script>
 
@@ -79,26 +88,26 @@ async function handlePerformOperation(payload: string): Promise<void> {
               <h1>Start an operation</h1>
             </v-col>
           </v-row>
-      
+
           <v-row align="center">
             <v-col>
               <v-select
                 v-model="operation"
-                label="Select operation"
-                density="compact"
                 :items="operations"
-                variant="outlined"
-                required
+                density="compact"
                 hide-details
+                label="Select operation"
+                required
+                variant="outlined"
               />
             </v-col>
-      
+
             <v-col>
-              <v-btn 
+              <v-btn
                 :disabled="!operation || appStore.balance <= 0"
-                :loading="createOperation.isLoading"
+                :loading="createOperationIsPending"
+                color="primary"
                 type="submit"
-                color="primary" 
                 variant="outlined"
               >
                 Create
@@ -109,26 +118,33 @@ async function handlePerformOperation(payload: string): Promise<void> {
       </v-col>
     </v-row>
 
-    <v-row v-if="createOperation.data || createOperation.isError">
+    <v-row>
       <v-col>
         <v-divider />
       </v-col>
     </v-row>
 
-    <v-row v-if="createOperation.data">
+    <v-row v-if="createOperation">
       <v-col>
         <keep-alive>
-          <component 
-            :is="operationComponent"
-            @submit="handlePerformOperation"
-          />
+          <component :is="operationComponent" @submit="handlePerformOperation" />
         </keep-alive>
       </v-col>
     </v-row>
 
-    <v-row v-else-if="createOperation.isError">
+    <v-row v-if="isError">
       <v-col>
-        <v-alert variant="tonal" icon="mdi-alert-circle" color="error" prominent>Something bad happened!</v-alert>
+        <v-alert color="error" icon="mdi-alert-circle" prominent variant="tonal">
+          <p class="text-capitalize">
+            {{ error.message }}
+          </p>
+        </v-alert>
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col>
+        <RecordsTable style="margin-top: 64px" />
       </v-col>
     </v-row>
   </div>

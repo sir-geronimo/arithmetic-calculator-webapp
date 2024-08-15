@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 const props = defineProps<{
   title: string
 }>()
@@ -12,7 +12,9 @@ const emit = defineEmits<{
   <form @submit.prevent="emit('submit')">
     <v-row>
       <v-col>
-        <h3>Run <b>{{ props.title }}</b> Operation</h3>
+        <h3>
+          Run <b class="text-lowercase">{{ props.title }}</b> Operation
+        </h3>
       </v-col>
     </v-row>
 
@@ -21,11 +23,11 @@ const emit = defineEmits<{
     <v-row>
       <v-col>
         <v-btn
-          type="submit"
+          append-icon="mdi-arrow-right-bottom"
           block
           color="primary"
+          type="submit"
           variant="tonal"
-          append-icon="mdi-arrow-right-bottom"
         >
           Run
         </v-btn>

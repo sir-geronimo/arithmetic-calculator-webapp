@@ -1,3 +1,5 @@
+import type { Operation } from '@/types/operation'
+
 export type Record = {
   id: string
   operation_id: string
@@ -8,4 +10,5 @@ export type Record = {
   date: string
   created_at: string
   deleted_at: string
+  operation: Operation
 }

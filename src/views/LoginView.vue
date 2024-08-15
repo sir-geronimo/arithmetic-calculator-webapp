@@ -1,30 +1,35 @@
-<script setup lang="ts">
-import { useAuth } from '@/composables/auth';
+<script lang="ts" setup>
+import { useAuth } from '@/composables/auth'
+import { Login } from '@/services/Auth'
+import { useMutation } from '@tanstack/vue-query'
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
+import { useAppStore } from '@/stores/app.store'
+import { GetBalance } from '@/services/Balance'
 
+const appStore = useAppStore()
 const { setToken } = useAuth()
 const router = useRouter()
 
 const visible = ref(false)
+const error = ref('')
 const form = reactive({
   username: '',
-  password: '',
+  password: ''
+})
+
+const { mutate } = useMutation({
+  mutationFn: Login,
+  async onSuccess({ access_token }) {
+    setToken(access_token)
+    appStore.balance = await GetBalance()
+
+    await router.push({ name: 'home' })
+  }
 })
 
 async function handleSubmit(): Promise<void> {
-  const res = await fetch(new URL('v1/login', import.meta.env.VITE_API_BASE_URL), {
-    method: 'POST',
-    body: JSON.stringify(form)
-  })
-  if (!res.ok) {
-    throw new Error(`failed with: ${res.status}`)
-  }
-
-  const { access_token } = await res.json()
-  setToken(access_token)
-
-  await router.push({ name: 'home' })
+  mutate(JSON.stringify(form))
 }
 </script>
 
@@ -36,44 +41,45 @@ async function handleSubmit(): Promise<void> {
           <v-card-title class="text-center">Please login</v-card-title>
         </v-col>
       </v-row>
-  
+
       <v-row>
         <v-col>
           <v-text-field
             v-model="form.username"
-            autofocus
             autocomplete="username"
-            prepend-inner-icon="mdi-account" 
-            placeholder="pepe_agallas" 
+            autofocus
+            placeholder="pepe_agallas"
+            prepend-inner-icon="mdi-account"
             variant="outlined"
           />
         </v-col>
       </v-row>
-  
+
       <v-row>
         <v-col>
           <v-text-field
             v-model="form.password"
+            :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+            :type="visible ? 'text' : 'password'"
             autocomplete="current-password"
             prepend-inner-icon="mdi-key"
-            variant="outlined" 
-            :type="visible ? 'text' : 'password'"
-            :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+            variant="outlined"
             @click:append-inner="visible = !visible"
           />
         </v-col>
       </v-row>
-  
+
+      <v-row v-if="error">
+        <v-col>
+          <v-alert color="error" type="warning" variant="tonal">
+            <p class="text-capitalize">{{ error }}</p>
+          </v-alert>
+        </v-col>
+      </v-row>
+
       <v-row>
         <v-col>
-          <v-btn
-            type="submit"
-            class="my-8"
-            color="blue"
-            size="large"
-            variant="tonal"
-            block
-          >
+          <v-btn block class="my-8" color="blue" size="large" type="submit" variant="tonal">
             Sign In
           </v-btn>
         </v-col>

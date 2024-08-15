@@ -3,8 +3,8 @@ import { reactive } from 'vue'
 import OperationForm from './operation_form.vue'
 
 const form = reactive({
-  num1: 0,
-  num2: 0,
+  num1: "0",
+  num2: "0",
 })
 
 const emit = defineEmits<{
@@ -13,8 +13,8 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <OperationForm 
-    title="Subtraction"
+  <OperationForm
+    title="Division"
     @submit="emit('submit', JSON.stringify(form))"
   >
     <v-row align="center">
@@ -30,7 +30,7 @@ const emit = defineEmits<{
 
       <v-col cols="auto">
         <v-sheet class="px-6 py-2 font-weight-bold" rounded color="primary">
-          -
+          /
         </v-sheet>
       </v-col>
 

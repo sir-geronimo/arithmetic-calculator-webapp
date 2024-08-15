@@ -1,7 +1,8 @@
 import { useAppStore } from '@/stores/app.store'
+import { useRouter } from 'vue-router'
 
 export function useAuth() {
-  const authToken = "auth_token"
+  const authToken = 'auth_token'
   const appStore = useAppStore()
 
   function getToken(): string | null {
@@ -11,7 +12,7 @@ export function useAuth() {
     return token
   }
 
-  function setToken(token: string) {
+  function setToken(token: string): void {
     appStore.loggedIn = !!token
 
     return window.sessionStorage.setItem(authToken, token)

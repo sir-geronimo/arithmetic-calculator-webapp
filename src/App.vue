@@ -1,22 +1,25 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { useAuth } from '@/composables/auth'
-import { onBeforeMount } from 'vue'
-import { useRouter } from 'vue-router';
 import { useAppStore } from '@/stores/app.store'
+import { GetBalance } from '@/services/Balance'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 const appStore = useAppStore()
-const { getToken, setToken } = useAuth()
 const router = useRouter()
+const { setToken } = useAuth()
 
-onBeforeMount(async () => {
-  const token = getToken()
-
-  if (token) {
-    await router.push({ name: 'home' })
-  } else {
-    await router.push({ name: 'login' })
-  }
+onMounted(async () => {
+  await fetchBalance()
 })
+
+async function fetchBalance(): Promise<void> {
+  try {
+    appStore.balance = await GetBalance()
+  } catch (error) {
+    await logout()
+  }
+}
 
 async function logout(): Promise<void> {
   setToken('')
@@ -30,13 +33,11 @@ async function logout(): Promise<void> {
   <v-app>
     <v-app-bar v-if="appStore.loggedIn">
       <v-app-bar-title>
-        <v-btn :to="{ name: 'home' }">
-          Calculator
-        </v-btn>
+        <v-btn :to="{ name: 'home' }"> Calculator</v-btn>
       </v-app-bar-title>
 
       <template #append>
-        <v-row align="center" style="margin-inline-end: 20px;">
+        <v-row align="center" style="margin-inline-end: 20px">
           <v-col>
             <p>
               <b>Balance: </b>
@@ -45,18 +46,11 @@ async function logout(): Promise<void> {
           </v-col>
 
           <v-col>
-            <v-btn :to="{ name: 'records' }">
-              Records
-            </v-btn>
+            <v-btn :to="{ name: 'records' }"> Records</v-btn>
           </v-col>
 
           <v-col>
-            <v-btn
-              color="teal"
-              variant="tonal"
-              append-icon="mdi-logout"
-              @click="logout"
-            >
+            <v-btn append-icon="mdi-logout" color="teal" variant="tonal" @click="logout">
               Sign Out
             </v-btn>
           </v-col>
@@ -65,12 +59,11 @@ async function logout(): Promise<void> {
     </v-app-bar>
 
     <v-container>
-      <v-main style="max-width: 720px;" class="mx-auto">
+      <v-main class="mx-auto" style="max-width: 720px">
         <router-view />
       </v-main>
     </v-container>
   </v-app>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>
