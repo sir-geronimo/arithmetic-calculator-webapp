@@ -1,5 +1,4 @@
 import { useAppStore } from '@/stores/app.store'
-import { useRouter } from 'vue-router'
 
 export function useAuth() {
   const authToken = 'auth_token'
