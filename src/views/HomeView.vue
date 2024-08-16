@@ -26,14 +26,13 @@ const operations = ref([
 const {
   data: createOperation,
   isPending: createOperationIsPending,
-  isError: createOperationIsError,
   error: createOperationError,
   mutate: createOperationMutate,
   reset: createOperationReset,
 } = useMutation({
   mutationFn: CreateOperation,
-  onError: async (err) => {
-    if (err.status === 401) {
+  onError: async (err: any) => {
+    if (err?.status === 401) {
       await router.push({ name: 'login' })
 
       setToken('')
@@ -42,7 +41,6 @@ const {
 })
 
 const {
-  isError: performOperationIsError,
   error: performOperationError,
   mutate: performOperationMutate,
 } = useMutation({
@@ -55,7 +53,6 @@ const {
   },
 })
 
-const isError = computed(() => performOperationIsError.value || createOperationIsError.value)
 const error = computed(() => performOperationError.value || createOperationError.value)
 
 const operationComponent = computed(() =>
@@ -136,7 +133,7 @@ async function handleCreateOperation(): Promise<void> {
       </v-col>
     </v-row>
 
-    <v-row v-if="isError">
+    <v-row v-if="error">
       <v-col>
         <v-alert color="error" icon="mdi-alert-circle" prominent variant="tonal">
           <p class="text-capitalize">

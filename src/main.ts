@@ -1,5 +1,5 @@
 import '@/assets/main.css'
-import { createApp } from 'vue'
+import { createApp, type ComponentPublicInstance } from 'vue'
 import { createPinia } from 'pinia'
 import App from '@/App.vue'
 import router from '@/router'
@@ -13,9 +13,9 @@ app.use(router)
 app.use(vuetify)
 app.use(VueQueryPlugin)
 
-app.config.errorHandler = (err, instance, info) => {
-  if (err.code === 401) {
-    instance.$router.push({ name: 'login' })
+app.config.errorHandler = (err: any) => {
+  if (err.code === 401 && router.currentRoute.value.name !== 'login') {
+    router.push({ name: 'login' })
   }
 }
 

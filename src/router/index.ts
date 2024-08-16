@@ -12,12 +12,16 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/LoginView.vue')
+      component: () => import('@/views/LoginView.vue'),
     },
     {
       path: '/records',
       name: 'records',
-      component: () => import('@/views/RecordsView.vue')
+      component: () => import('@/views/RecordsView.vue'),
+    },
+    {
+      path: "/:pathMatch(.*)",
+      redirect: { name: "home" },
     },
   ]
 })
