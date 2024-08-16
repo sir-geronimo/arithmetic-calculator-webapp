@@ -10,6 +10,7 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  base: '/arithmetic-calculator-webapp/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

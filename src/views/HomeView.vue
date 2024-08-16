@@ -5,8 +5,12 @@ import { useAppStore } from '@/stores/app.store'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { computed, defineAsyncComponent, ref } from 'vue'
 import type { Record } from '@/types/record'
+import { useAuth } from '@/composables/auth'
+import { useRouter } from 'vue-router'
 
 const appStore = useAppStore()
+const { setToken } = useAuth()
+const router = useRouter()
 const queryClient = useQueryClient()
 
 const operation = ref<string | null>(null)
@@ -28,7 +32,7 @@ const {
   reset: createOperationReset,
 } = useMutation({
   mutationFn: CreateOperation,
-  onSuccess: async (err) => {
+  onError: async (err) => {
     if (err.status === 401) {
       await router.push({ name: 'login' })
 
