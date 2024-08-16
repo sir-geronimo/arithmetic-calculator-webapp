@@ -14,6 +14,8 @@ app.use(vuetify)
 app.use(VueQueryPlugin)
 
 app.config.errorHandler = (err: any) => {
+  console.error(err)
+
   if (err.code === 401 && router.currentRoute.value.name !== 'login') {
     router.push({ name: 'login' })
   }

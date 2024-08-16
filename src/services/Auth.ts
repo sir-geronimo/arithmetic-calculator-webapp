@@ -1,5 +1,6 @@
 export async function Login(payload: string): Promise<{ access_token: string }> {
-  const res = await fetch(new URL('v1/login', import.meta.env.VITE_API_BASE_URL), {
+  const url = new URL('v1/login', import.meta.env.VITE_API_BASE_URL)
+  const res = await fetch(url, {
     method: 'POST',
     body: payload,
     headers: {
