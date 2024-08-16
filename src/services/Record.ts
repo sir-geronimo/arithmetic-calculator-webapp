@@ -1,7 +1,12 @@
 import { useAuth } from '@/composables/auth'
 import type { Record } from '@/types/record'
 
-export async function GetRecords(opts: { q: string; page: number; per_page: number }): Promise<{
+export async function GetRecords(opts: {
+  q: string | undefined
+  page: number
+  per_page: number
+  order_asc: boolean
+}): Promise<{
   data: Record[]
   page: number
   total: number
@@ -11,7 +16,7 @@ export async function GetRecords(opts: { q: string; page: number; per_page: numb
   const url = new URL('v1/records', import.meta.env.VITE_API_BASE_URL)
   for (const [key, val] of Object.entries(opts)) {
     if (val) {
-      url.searchParams.set(key, val)
+      url.searchParams.set(key, `${val}`)
     }
   }
 
