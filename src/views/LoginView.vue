@@ -12,13 +12,12 @@ const { setToken } = useAuth()
 const router = useRouter()
 
 const visible = ref(false)
-const error = ref('')
 const form = reactive({
   username: '',
   password: ''
 })
 
-const { mutate } = useMutation({
+const { mutate, error } = useMutation({
   mutationFn: Login,
   async onSuccess({ access_token }) {
     setToken(access_token)
@@ -48,8 +47,9 @@ async function handleSubmit(): Promise<void> {
             v-model="form.username"
             autocomplete="username"
             autofocus
-            placeholder="pepe_agallas"
+            placeholder="sir-geronimo"
             prepend-inner-icon="mdi-account"
+            label="Username"
             variant="outlined"
           />
         </v-col>
@@ -63,6 +63,7 @@ async function handleSubmit(): Promise<void> {
             :type="visible ? 'text' : 'password'"
             autocomplete="current-password"
             prepend-inner-icon="mdi-key"
+            label="Password"
             variant="outlined"
             @click:append-inner="visible = !visible"
           />
@@ -72,7 +73,7 @@ async function handleSubmit(): Promise<void> {
       <v-row v-if="error">
         <v-col>
           <v-alert color="error" type="warning" variant="tonal">
-            <p class="text-capitalize">{{ error }}</p>
+            <p class="text-capitalize">{{ error?.message }}</p>
           </v-alert>
         </v-col>
       </v-row>
